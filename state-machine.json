@@ -1,0 +1,101 @@
+{
+  "Comment": "Step Functions Dojo",
+  "StartAt": "Step - Pass",
+  "States": {
+    "Step - Pass": {
+      "Comment": "A Pass state passes its input to its output, without performing work. Pass states are useful when constructing and debugging state machines.",
+      "Type": "Pass",
+      "Next": "Step - Choice example"
+    },
+    "Step - Choice example": {
+      "Comment": "A Choice state adds branching logic to a state machine. Choice rules can implement 16 different comparison operators, and can be combined using And, Or, and Not",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.IsInvokeLambda",
+          "BooleanEquals": true,
+          "Next": "Step - Invoke Lambda"
+        },
+        {
+          "Variable": "$.IsInvokeLambda",
+          "BooleanEquals": false,
+          "Next": "Step - Not Invoke Lambda"
+        }
+      ],
+      "Default": "Step - Invoke Lambda"
+    },
+    "Step - Invoke Lambda": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "TimeoutSeconds": 15,
+      "Parameters": {
+        "FunctionName": "{arn lambda function}:StepFunctionsDojoLambda",
+        "Payload": {
+          "Input.$": "$"
+        }
+      },
+      "Next": "Step - Wait",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "BackoffRate": 2,
+          "MaxAttempts": 3
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Step - Fail"
+        }
+      ]
+    },
+    "Step - Not Invoke Lambda": {
+      "Type": "Pass",
+      "Next": "Step - Wait"
+    },
+    "Step - Wait": {
+      "Comment": "A Wait state delays the state machine from continuing for a specified time.",
+      "Type": "Wait",
+      "Seconds": 3,
+      "Next": "Step - Parallel State"
+    },
+    "Step - Parallel State": {
+      "Comment": "A Parallel state can be used to create parallel branches of execution in your state machine.",
+      "Type": "Parallel",
+      "Next": "Step - End",
+      "Branches": [
+        {
+          "StartAt": "Step - Parallel 01",
+          "States": {
+            "Step - Parallel 01": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Step - Parallel 02",
+          "States": {
+            "Step - Parallel 02": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Step - End": {
+      "Type": "Pass",
+      "End": true
+    },
+    "Step - Fail": {
+      "Type": "Fail",
+      "Cause": "Error in dojo :( "
+    }
+  }
+}
