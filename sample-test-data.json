@@ -1,0 +1,5 @@
+{
+  "description": "Dojo Step Functions",
+  "step":1,
+	"IsInvokeLambda": "true"
+}
